@@ -1,0 +1,205 @@
+version: '3'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: unless-stopped
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - nouveau-middleware
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: unless-stopped
+    ports:
+      - 9092:9092
+    networks:
+      - nouveau-middleware
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+  discovery-server:
+    build:
+      context: .
+      dockerfile: discovery-server/Dockerfile
+    container_name: discovery-server
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - 8761:8761
+    networks:
+      - nouveau-middleware
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=TRACE
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8080:8080
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    networks:
+      - nouveau-middleware
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./grafana:/etc/prometheus
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+  grafana:
+      image: grafana/grafana:latest
+      container_name: grafana
+      networks:
+        - nouveau-middleware
+      ports:
+        - "3000:3000"
+      volumes:
+        - grafana-data:/var/lib/grafana
+      restart: unless-stopped
+  customer-service:
+    build:
+      context: .
+      dockerfile: customer-service/Dockerfile
+    container_name: customer-service
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MIDDLEWARE_GATEWAY_LINK=http://api-gateway:8080/cbsservices
+      - MIDDLEWARE_VAULT_KV_ENABLED=true
+      - MIDDLEWARE_VAULT_AUTH=TOKEN
+      - MIDDLEWARE_VAULT_TOKEN=18456350-7b89-11ed-85e9-a5830358e351
+      - MIDDLEWARE_VAULT_SCHEME=http
+      - MIDDLEWARE_VAULT_HOST=localhost
+      - MIDDLEWARE_VAULT_PORT=8201
+      - MIDDLEWARE_VAULT_CONFIG=vault://
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8083:8083
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+      - api-gateway
+  account-service:
+    build:
+      context: .
+      dockerfile: account-service/Dockerfile
+    container_name: account-service
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MIDDLEWARE_GATEWAY_LINK=http://api-gateway:8080/cbsservices
+      - MIDDLEWARE_VAULT_KV_ENABLED=true
+      - MIDDLEWARE_VAULT_AUTH=TOKEN
+      - MIDDLEWARE_VAULT_TOKEN=18456350-7b89-11ed-85e9-a5830358e351
+      - MIDDLEWARE_VAULT_SCHEME=http
+      - MIDDLEWARE_VAULT_HOST=localhost
+      - MIDDLEWARE_VAULT_PORT=8201
+      - MIDDLEWARE_VAULT_CONFIG=vault://
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8085:8085
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+      - api-gateway
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    container_name: transaction-service
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MIDDLEWARE_GATEWAY_LINK=http://api-gateway:8080/cbsservices
+      - MIDDLEWARE_VAULT_KV_ENABLED=true
+      - MIDDLEWARE_VAULT_AUTH=TOKEN
+      - MIDDLEWARE_VAULT_TOKEN=18456350-7b89-11ed-85e9-a5830358e351
+      - MIDDLEWARE_VAULT_SCHEME=http
+      - MIDDLEWARE_VAULT_HOST=localhost
+      - MIDDLEWARE_VAULT_PORT=8201
+      - MIDDLEWARE_VAULT_CONFIG=vault://
+      - KAFKA_HOST=kafka:9092
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8081:8081
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+      - api-gateway
+      - kafka
+  teller-service:
+    build:
+      context: .
+      dockerfile: teller-service/Dockerfile
+    container_name: teller-service
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MIDDLEWARE_GATEWAY_LINK=http://api-gateway:8080/cbsservices
+      - MIDDLEWARE_VAULT_KV_ENABLED=true
+      - MIDDLEWARE_VAULT_AUTH=TOKEN
+      - MIDDLEWARE_VAULT_TOKEN=18456350-7b89-11ed-85e9-a5830358e351
+      - MIDDLEWARE_VAULT_SCHEME=http
+      - MIDDLEWARE_VAULT_HOST=localhost
+      - MIDDLEWARE_VAULT_PORT=8201
+      - MIDDLEWARE_VAULT_CONFIG=vault://
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8084:8084
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+      - api-gateway
+  branch-service:
+    build:
+      context: .
+      dockerfile: branch-service/Dockerfile
+    container_name: branch-service
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MIDDLEWARE_GATEWAY_LINK=http://api-gateway:8080/cbsservices
+      - MIDDLEWARE_VAULT_KV_ENABLED=true
+      - MIDDLEWARE_VAULT_AUTH=TOKEN
+      - MIDDLEWARE_VAULT_TOKEN=18456350-7b89-11ed-85e9-a5830358e351
+      - MIDDLEWARE_VAULT_SCHEME=http
+      - MIDDLEWARE_VAULT_HOST=localhost
+      - MIDDLEWARE_VAULT_PORT=8201
+      - MIDDLEWARE_VAULT_CONFIG=vault://
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka
+    ports:
+      - 8082:8082
+    networks:
+      - nouveau-middleware
+    depends_on:
+      - discovery-server
+      - api-gateway
+networks:
+  nouveau-middleware:
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,36 @@
+version: '3'
+services:
+  vault-server:
+    image: vault:1.13.3
+    container_name: vault-server
+    restart: unless-stopped
+    ports:
+      - "8201:8201"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8201"
+      VAULT_LOCAL_CONFIG: '{"storage": {"file": {"path": "/vault/volumes/file"}}, "listener": [{"tcp": { "address": "0.0.0.0:8201", "tls_disable": true}}], "default_lease_ttl": "168h", "max_lease_ttl": "720h", "ui": true}'
+      VAULT_DEV_ROOT_TOKEN_ID: "18456350-7b89-11ed-85e9-a5830358e351"
+      VAULT_TOKEN: "18456350-7b89-11ed-85e9-a5830358e351"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-volume:/data
+    networks:
+      vault-network:
+        aliases:
+          - vault-server
+  vault-client:
+    build:
+      context: .
+      dockerfile: vault-service/Dockerfile
+    container_name: vault-client
+    environment:
+      VAULT_ADDR: "http://vault-server:8201"
+    networks:
+      vault-network:
+        aliases:
+          - vault-client
+networks:
+  vault-network:
+volumes:
+  vault-volume:

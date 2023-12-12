@@ -1,0 +1,33 @@
+[submodule "api-gateway"]
+	path = api-gateway
+	url = http://10.0.102.19/nouveau-middleware/api-gateway.git
+[submodule "customer-service"]
+	path = customer-service
+	url = http://10.0.102.19/nouveau-middleware/customer-service.git
+[submodule "account-service"]
+	path = account-service
+	url = http://10.0.102.19/nouveau-middleware/account-service.git
+[submodule "branch-service"]
+	path = branch-service
+	url = http://10.0.102.19/nouveau-middleware/branch-service.git
+[submodule "database-read-service"]
+	path = database-read-service
+	url = http://10.0.102.19/nouveau-middleware/database-read-service.git
+[submodule "database-write-service"]
+	path = database-write-service
+	url = http://10.0.102.19/nouveau-middleware/database-write-service.git
+[submodule "discovery-server"]
+	path = discovery-server
+	url = http://10.0.102.19/nouveau-middleware/discovery-server.git
+[submodule "notification-service"]
+	path = notification-service
+	url = http://10.0.102.19/nouveau-middleware/notification-service.git
+[submodule "teller-service"]
+	path = teller-service
+	url = http://10.0.102.19/nouveau-middleware/teller-service.git
+[submodule "transaction-service"]
+	path = transaction-service
+	url = http://10.0.102.19/nouveau-middleware/transaction-service.git
+[submodule "configuration-service"]
+	path = configuration-service
+	url = http://gitlab.pkf-researchcenter.com/pkfokam-research-center/digital/middleware_core_banking_apis/configuration-service.git
